@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple RAG Chat</title>
+    <style>
+        /* Simple styling for better readability */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        
+        /* Chat container styling */
+        #chat-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Input area styling */
+        #input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        #query-input {
+            flex-grow: 1;
+            padding: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+        }
+
+        /* Message styling */
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .user-message {
+            background-color: #e3f2fd;
+            margin-left: 20%;
+        }
+
+        .bot-message {
+            background-color: #f5f5f5;
+            margin-right: 20%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main chat interface -->
+    <h1>RAG Chat Interface</h1>
+    
+    <!-- Container for chat messages -->
+    <div id="chat-container"></div>
+    
+    <!-- Input area -->
+    <div id="input-container">
+        <input type="text" 
+               id="query-input" 
+               placeholder="Type your question here..."
+               onkeypress="if(event.key === 'Enter') sendMessage()">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        // Function to add a message to the chat container
+        function addMessage(text, isUser) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            
+            // Add appropriate styling based on message type
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.textContent = text;
+            
+            chatContainer.appendChild(messageDiv);
+            
+            // Auto-scroll to the latest message
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Function to send message to the server
+        async function sendMessage() {
+            const input = document.getElementById('query-input');
+            const query = input.value.trim();
+            
+            // Don't send empty messages
+            if (!query) return;
+
+            // Add user message to chat
+            addMessage(query, true);
+            
+            // Clear input
+            input.value = '';
+
+            try {
+                // Send request to our Flask endpoint
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+                
+                // Add bot response to chat
+                addMessage(data.response, false);
+            } catch (error) {
+                // Handle any errors
+                addMessage('Error: Could not get response from server', false);
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html> 
